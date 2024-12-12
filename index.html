@@ -63,9 +63,11 @@
             }
 
             .card {
-              position: absolute;
-              cursor: move;
-              z-index: 10;
+              box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.4);
+            }
+
+            .card.over {
+              box-shadow: 5px 5px 20px rgba(73, 255, 53, 0.4);
             }
 
 
@@ -79,10 +81,64 @@
             var textPresent = true;
 
 
+            var dragSrcEl = null;
+  
+            function handleDragStart(e) {
+              this.style.opacity = '0.4';
+              
+              dragSrcEl = this;
+
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/html', this.innerHTML);
+            }
+
+            function handleDragOver(e) {
+              if (e.preventDefault) {
+                e.preventDefault();
+              }
+
+              e.dataTransfer.dropEffect = 'move';
+              
+              return false;
+            }
+
+            function handleDragEnter(e) {
+              this.classList.add('over');
+            }
+
+            function handleDragLeave(e) {
+              this.classList.remove('over');
+            }
+
+            function handleDrop(e) {
+              if (e.stopPropagation) {
+                e.stopPropagation(); // stops the browser from redirecting.
+              }
+              
+              if (dragSrcEl != this) {
+                dragSrcEl.innerHTML = this.innerHTML;
+                this.innerHTML = e.dataTransfer.getData('text/html');
+              }
+
+              $("meta").remove();
+              
+              return false;
+            }
+
+            function handleDragEnd(e) {
+              this.style.opacity = '1';
+              
+              let items = document.querySelectorAll('.card');
+              items.forEach(function (item) {
+                item.classList.remove('over');
+                var closeButton = item.querySelector(".close-button");
+                closeButton.onclick = function(e) { item.parentNode.removeChild(item) };
+              });
+            }
+
             $("#create-task-btn").click(function() {
 
 
-              /* Javascript Feature Submission */
               console.log("Name: " + document.getElementById('name-input').value);
               console.log("Subtitle: " + document.getElementById('subtitle-input').value);
               console.log("Description: " + document.getElementById('description-input').value);
@@ -117,6 +173,7 @@
               cardDiv.style.marginLeft = "1em";
               cardDiv.style.marginRight = "1em";
               cardDiv.style.float = "left";
+              cardDiv.setAttribute("draggable", "true");
 
               var cardColor = document.createElement('div');
               cardColor.classList.add("card-header");
@@ -156,6 +213,16 @@
 
               $(cardDiv).append(cardColor);
               $(cardDiv).append(cardBody);
+
+
+
+              /* Javascript Feature Submission */
+              cardDiv.addEventListener('dragstart', handleDragStart, false);
+              cardDiv.addEventListener('dragenter', handleDragEnter, false);
+              cardDiv.addEventListener('dragover', handleDragOver, false);
+              cardDiv.addEventListener('dragleave', handleDragLeave, false);
+              cardDiv.addEventListener('drop', handleDrop, false);
+              cardDiv.addEventListener('dragend', handleDragEnd, false);
 
               $("#content").append(cardDiv);
 
@@ -207,7 +274,7 @@
       
       
 
-      <div class="modal fade" id="taskCreate" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal fade" id="taskCreate" tabindex="-1" aria-labelledby="taskCreate">
         <div class="modal-dialog">
           <div class="modal-content">
 
